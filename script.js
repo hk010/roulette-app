@@ -1,122 +1,132 @@
-// ルーレットアプリのJavaScript
+// 3連スロットアプリのJavaScript
 
 const items = ["🍎", "🍌", "🍇", "🍒", "🍋", "⭐"];
-let isSpinning = false;
-let animationId = null;
-let currentPosition = 0;
-let speed = 0;
+
+// 各スロットの状態管理
+const slots = [
+    { id: 1, element: null, spinning: false, currentPosition: 0, speed: 0 },
+    { id: 2, element: null, spinning: false, currentPosition: 0, speed: 0 },
+    { id: 3, element: null, spinning: false, currentPosition: 0, speed: 0 }
+];
+
+let allStoppedResults = [];
 
 // DOM要素の取得
-const roulette = document.getElementById('roulette');
 const startButton = document.getElementById('startButton');
-const stopButton = document.getElementById('stopButton');
+const stopButtons = [
+    document.getElementById('stopButton1'),
+    document.getElementById('stopButton2'),
+    document.getElementById('stopButton3')
+];
 const resultDiv = document.getElementById('result');
 
+// スロット要素を取得
+slots.forEach((slot, index) => {
+    slot.element = document.getElementById(`slot${index + 1}`);
+});
+
 // レバーを押すボタンのイベント
-startButton.addEventListener('click', startRoulette);
+startButton.addEventListener('click', startAllSlots);
 
-// ストップボタンのイベント
-stopButton.addEventListener('click', stopRoulette);
+// 各ストップボタンのイベント
+stopButtons.forEach((button, index) => {
+    button.addEventListener('click', () => stopSlot(index));
+});
 
-// ルーレット開始
-function startRoulette() {
-    if (isSpinning) return;
-
-    isSpinning = true;
+// 全スロット開始
+function startAllSlots() {
     startButton.disabled = true;
-    stopButton.disabled = false;
     resultDiv.innerHTML = '';
+    allStoppedResults = [];
 
-    // 初期スピードを設定
-    speed = 20;
+    slots.forEach((slot, index) => {
+        slot.spinning = true;
+        slot.speed = 30;
+        stopButtons[index].disabled = false;
 
-    // アニメーション開始
-    spin();
+        // スロットにアイテムを複製して無限スクロール効果を作る
+        initSlot(slot.element);
+
+        // CSSアニメーションを追加
+        slot.element.classList.add('spinning');
+    });
 }
 
-// ルーレット回転のアニメーション
-function spin() {
-    if (!isSpinning) return;
+// 個別スロット停止
+function stopSlot(index) {
+    const slot = slots[index];
+    if (!slot.spinning) return;
 
-    currentPosition -= speed;
-    roulette.style.transform = `translateX(${currentPosition}px)`;
+    stopButtons[index].disabled = true;
 
-    // 位置をループさせる（無限スクロール効果）
-    const itemWidth = roulette.offsetWidth / items.length;
-    if (Math.abs(currentPosition) >= itemWidth) {
-        currentPosition += itemWidth;
-        // 最初のアイテムを最後に移動
-        const firstItem = roulette.firstElementChild;
-        roulette.appendChild(firstItem);
+    // CSSアニメーションを停止
+    slot.element.classList.remove('spinning');
+
+    // ランダムな位置で停止（各アイテムは150px）
+    const randomIndex = Math.floor(Math.random() * items.length);
+    const finalPosition = -(randomIndex * 150);
+
+    slot.element.style.transform = `translateY(${finalPosition}px)`;
+    slot.spinning = false;
+
+    // 停止した結果を記録
+    allStoppedResults[index] = items[randomIndex];
+
+    // 全スロットが停止したかチェック
+    checkAllStopped();
+}
+
+// 全スロットが停止したかチェック
+function checkAllStopped() {
+    const allStopped = slots.every(slot => !slot.spinning);
+
+    if (allStopped && allStoppedResults.length === 3) {
+        // 結果を判定
+        setTimeout(() => {
+            checkWin();
+            startButton.disabled = false;
+        }, 500);
+    }
+}
+
+// 勝敗判定
+function checkWin() {
+    const [first, second, third] = allStoppedResults;
+
+    // 3つすべてが一致しているかチェック
+    if (first === second && second === third) {
+        // 勝利！
+        resultDiv.innerHTML = `<div class="result-display">🎉 Congratulation!! 🎉</div>`;
+    } else {
+        // 不一致の場合は何も表示しない（または「もう一度チャレンジ！」などを表示してもOK）
+        // resultDiv.innerHTML = `<div class="result-display" style="font-size: 1.5em;">もう一度チャレンジ！</div>`;
+    }
+}
+
+// スロット初期化（アイテムを複製）
+function initSlot(slotElement) {
+    // 既存のクローンをクリア
+    while (slotElement.children.length > 6) {
+        slotElement.removeChild(slotElement.lastChild);
     }
 
-    animationId = requestAnimationFrame(spin);
-}
+    const originalItems = Array.from(slotElement.children).slice(0, 6);
 
-// ルーレット停止
-function stopRoulette() {
-    if (!isSpinning) return;
-
-    stopButton.disabled = true;
-
-    // 徐々にスピードを落とす
-    const decelerate = () => {
-        speed *= 0.95;
-
-        if (speed < 0.5) {
-            // 完全に停止
-            cancelAnimationFrame(animationId);
-            isSpinning = false;
-            startButton.disabled = false;
-
-            // 結果を表示
-            showResult();
-        } else {
-            requestAnimationFrame(decelerate);
-        }
-    };
-
-    decelerate();
-}
-
-// 結果を表示
-function showResult() {
-    // ルーレットの中央に表示されているアイテムを取得
-    const rouletteRect = roulette.getBoundingClientRect();
-    const centerX = rouletteRect.left + rouletteRect.width / 2;
-
-    // 各アイテムの位置をチェック
-    let selectedItem = items[0];
-    let minDistance = Infinity;
-
-    const rouletteItems = roulette.querySelectorAll('.roulette-item');
-    rouletteItems.forEach(item => {
-        const itemRect = item.getBoundingClientRect();
-        const itemCenterX = itemRect.left + itemRect.width / 2;
-        const distance = Math.abs(centerX - itemCenterX);
-
-        if (distance < minDistance) {
-            minDistance = distance;
-            selectedItem = item.textContent;
-        }
-    });
-
-    // 結果を画面中央に表示
-    resultDiv.innerHTML = `<div class="result-display">${selectedItem}</div>`;
-}
-
-// 初期化時にルーレットアイテムを複数回複製して無限スクロール効果を作る
-function initRoulette() {
-    const originalItems = Array.from(roulette.children);
-
-    // 3セット追加（スムーズなスクロールのため）
-    for (let i = 0; i < 3; i++) {
+    // 複数セット追加（スムーズな回転のため）
+    for (let i = 0; i < 5; i++) {
         originalItems.forEach(item => {
             const clone = item.cloneNode(true);
-            roulette.appendChild(clone);
+            slotElement.appendChild(clone);
         });
     }
+
+    // 初期位置をリセット
+    slotElement.style.transform = 'translateY(0)';
 }
 
-// ページ読み込み時に初期化
-initRoulette();
+// ページ読み込み時に各スロットを初期化
+window.addEventListener('load', () => {
+    slots.forEach(slot => {
+        initSlot(slot.element);
+    });
+});
