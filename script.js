@@ -10,7 +10,6 @@ const slots = [
 ];
 
 let allStoppedResults = [];
-let isReach = false;
 
 // DOM要素の取得
 const startButton = document.getElementById('startButton');
@@ -20,12 +19,6 @@ const stopButtons = [
     document.getElementById('stopButton3')
 ];
 const resultDiv = document.getElementById('result');
-const reachDisplay = document.getElementById('reachDisplay');
-const slotWindows = [
-    document.querySelector('.slot-container:nth-child(1) .slot-window'),
-    document.querySelector('.slot-container:nth-child(2) .slot-window'),
-    document.querySelector('.slot-container:nth-child(3) .slot-window')
-];
 
 // スロット要素を取得
 slots.forEach((slot, index) => {
@@ -45,10 +38,6 @@ function startAllSlots() {
     startButton.disabled = true;
     resultDiv.innerHTML = '';
     allStoppedResults = [];
-    isReach = false;
-
-    // リーチ演出をリセット
-    hideReachEffect();
 
     slots.forEach((slot, index) => {
         slot.spinning = true;
@@ -83,9 +72,6 @@ function stopSlot(index) {
     // 停止した結果を記録
     allStoppedResults[index] = items[randomIndex];
 
-    // リーチ判定（2つ停止した時点でチェック）
-    checkReach();
-
     // 全スロットが停止したかチェック
     checkAllStopped();
 }
@@ -95,9 +81,6 @@ function checkAllStopped() {
     const allStopped = slots.every(slot => !slot.spinning);
 
     if (allStopped && allStoppedResults.length === 3) {
-        // リーチ演出を非表示
-        hideReachEffect();
-
         // 結果を判定
         setTimeout(() => {
             checkWin();
@@ -139,46 +122,6 @@ function initSlot(slotElement) {
 
     // 初期位置をリセット
     slotElement.style.transform = 'translateY(0)';
-}
-
-// リーチ判定
-function checkReach() {
-    // すでにリーチ判定済みの場合はスキップ
-    if (isReach) return;
-
-    // 停止したスロットの数をカウント
-    const stoppedCount = allStoppedResults.filter(result => result !== undefined).length;
-
-    // 2つ停止した時点でリーチ判定
-    if (stoppedCount === 2) {
-        const results = allStoppedResults.filter(result => result !== undefined);
-
-        // 2つが同じ絵柄ならリーチ
-        if (results[0] === results[1]) {
-            isReach = true;
-            showReachEffect();
-
-            // まだ回っているスロットを見つけて強調
-            const spinningIndex = slots.findIndex(slot => slot.spinning);
-            if (spinningIndex !== -1) {
-                slotWindows[spinningIndex].classList.add('reach-highlight');
-            }
-        }
-    }
-}
-
-// リーチ演出を表示
-function showReachEffect() {
-    reachDisplay.classList.add('active');
-}
-
-// リーチ演出を非表示
-function hideReachEffect() {
-    reachDisplay.classList.remove('active');
-    // すべてのスロットから強調を削除
-    slotWindows.forEach(window => {
-        window.classList.remove('reach-highlight');
-    });
 }
 
 // ページ読み込み時に各スロットを初期化
