@@ -79,7 +79,7 @@ h1 {
 
 /* 回転アニメーション */
 .slot.spinning {
-    animation: spin 0.1s linear infinite;
+    animation: spin 0.2s linear infinite;
 }
 
 @keyframes spin {
