@@ -10,6 +10,7 @@ const slots = [
 ];
 
 let allStoppedResults = [];
+let isReachActive = false;
 
 // DOM要素の取得
 const startButton = document.getElementById('startButton');
@@ -19,6 +20,8 @@ const stopButtons = [
     document.getElementById('stopButton3')
 ];
 const resultDiv = document.getElementById('result');
+const reachOverlay = document.getElementById('reachOverlay');
+const slotWindows = document.querySelectorAll('.slot-window');
 
 // スロット要素を取得
 slots.forEach((slot, index) => {
@@ -38,6 +41,11 @@ function startAllSlots() {
     startButton.disabled = true;
     resultDiv.innerHTML = '';
     allStoppedResults = [];
+    isReachActive = false;
+
+    // リーチ演出をリセット
+    reachOverlay.classList.remove('show');
+    slotWindows.forEach(window => window.classList.remove('reach-active'));
 
     slots.forEach((slot, index) => {
         slot.spinning = true;
@@ -72,6 +80,9 @@ function stopSlot(index) {
     // 停止した結果を記録
     allStoppedResults[index] = items[randomIndex];
 
+    // リーチ判定
+    checkReach();
+
     // 全スロットが停止したかチェック
     checkAllStopped();
 }
@@ -81,6 +92,12 @@ function checkAllStopped() {
     const allStopped = slots.every(slot => !slot.spinning);
 
     if (allStopped && allStoppedResults.length === 3) {
+        // リーチ演出を非表示
+        if (isReachActive) {
+            reachOverlay.classList.remove('show');
+            slotWindows.forEach(window => window.classList.remove('reach-active'));
+        }
+
         // 結果を判定
         setTimeout(() => {
             checkWin();
@@ -122,6 +139,32 @@ function initSlot(slotElement) {
 
     // 初期位置をリセット
     slotElement.style.transform = 'translateY(0)';
+}
+
+// リーチ判定
+function checkReach() {
+    // すでにリーチ演出が発動している場合はスキップ
+    if (isReachActive) return;
+
+    // 停止したスロットの数をカウント
+    const stoppedSlots = allStoppedResults.filter(result => result !== undefined);
+
+    // 2つ停止した時点でリーチ判定
+    if (stoppedSlots.length === 2) {
+        // 2つの結果が同じか確認
+        if (stoppedSlots[0] === stoppedSlots[1]) {
+            // リーチ発動！
+            isReachActive = true;
+            reachOverlay.classList.add('show');
+
+            // まだ回っているスロットを見つけて強調
+            slots.forEach((slot, index) => {
+                if (slot.spinning) {
+                    slotWindows[index].classList.add('reach-active');
+                }
+            });
+        }
+    }
 }
 
 // ページ読み込み時に各スロットを初期化

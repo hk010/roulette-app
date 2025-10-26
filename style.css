@@ -91,6 +91,109 @@ h1 {
     }
 }
 
+/* リーチ演出 */
+.reach-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    pointer-events: none;
+    animation: reachFlash 0.5s ease-in-out infinite;
+}
+
+.reach-overlay.show {
+    display: flex;
+}
+
+@keyframes reachFlash {
+    0% {
+        background-color: rgba(255, 0, 0, 0.3);
+    }
+    50% {
+        background-color: rgba(255, 255, 0, 0.4);
+    }
+    100% {
+        background-color: rgba(255, 0, 0, 0.3);
+    }
+}
+
+.reach-text {
+    font-size: 10em;
+    font-weight: bold;
+    color: #ff0000;
+    text-shadow:
+        0 0 10px #fff,
+        0 0 20px #fff,
+        0 0 30px #fff,
+        0 0 40px #ff0000,
+        0 0 70px #ff0000,
+        0 0 80px #ff0000,
+        0 0 100px #ff0000,
+        0 0 150px #ff0000;
+    animation: reachPulse 0.5s ease-in-out infinite;
+}
+
+@keyframes reachPulse {
+    0% {
+        transform: scale(1) rotate(-5deg);
+    }
+    25% {
+        transform: scale(1.1) rotate(5deg);
+    }
+    50% {
+        transform: scale(1.2) rotate(-5deg);
+    }
+    75% {
+        transform: scale(1.1) rotate(5deg);
+    }
+    100% {
+        transform: scale(1) rotate(-5deg);
+    }
+}
+
+/* リーチ時のスロット強調 */
+.slot-window.reach-active {
+    border: 6px solid #ff0000;
+    box-shadow:
+        0 0 20px #ff0000,
+        0 0 40px #ff0000,
+        0 0 60px #ff0000,
+        inset 0 0 20px rgba(255, 0, 0, 0.4);
+    animation: slotPulse 0.5s ease-in-out infinite;
+}
+
+@keyframes slotPulse {
+    0% {
+        border-color: #ff0000;
+        box-shadow:
+            0 0 20px #ff0000,
+            0 0 40px #ff0000,
+            0 0 60px #ff0000,
+            inset 0 0 20px rgba(255, 0, 0, 0.4);
+    }
+    50% {
+        border-color: #ffff00;
+        box-shadow:
+            0 0 30px #ffff00,
+            0 0 50px #ffff00,
+            0 0 70px #ffff00,
+            inset 0 0 30px rgba(255, 255, 0, 0.5);
+    }
+    100% {
+        border-color: #ff0000;
+        box-shadow:
+            0 0 20px #ff0000,
+            0 0 40px #ff0000,
+            0 0 60px #ff0000,
+            inset 0 0 20px rgba(255, 0, 0, 0.4);
+    }
+}
+
 .result {
     min-height: 100px;
     display: flex;
